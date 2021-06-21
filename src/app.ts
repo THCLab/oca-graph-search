@@ -9,7 +9,7 @@ app.use(cors())
 const port: number = 3000
 
 import gremlin from 'gremlin'
-const { statics: __, P } = gremlin.process
+const { statics: __ } = gremlin.process
 const traversal = gremlin.process.AnonymousTraversalSource.traversal;
 const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
 const g = traversal().withRemote(new DriverRemoteConnection('ws://localhost:8182/gremlin'));
@@ -18,6 +18,14 @@ import { EntityRepo } from './repositories/EntityRepo'
 import { FindEntitiesByMeta } from './services/FindEntitiesByMeta'
 const entityRepo = new EntityRepo(g)
 const findEntitiesByMeta = new FindEntitiesByMeta(entityRepo)
+import { MetaRepo } from './repositories/MetaRepo'
+import { GetMetaNames } from './services/GetMetaNames'
+const metaRepo = new MetaRepo(g)
+const getMetaNames = new GetMetaNames(metaRepo)
+import { GetMetaByName } from './services/GetMetaByName'
+const getMetaByName = new GetMetaByName(metaRepo)
+import { GetOperators } from './services/GetOperators'
+const getOperators = new GetOperators()
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello world!')
@@ -29,6 +37,35 @@ app.get('/q', async (req: Request, res: Response) => {
     const entities = await findEntitiesByMeta.call(params)
     res.json({
       results: entities
+    })
+  } catch (e) {
+    console.error(e)
+    res.json({
+      errors: e
+    })
+  }
+})
+
+app.get('/meta', async (_req: Request, res: Response) => {
+  try {
+    const names = await getMetaNames.call()
+    res.json({
+      results: names
+    })
+  } catch (e) {
+    res.json({
+      errors: e
+    })
+  }
+})
+
+app.get('/meta/:name', async (req: Request, res: Response) => {
+  try {
+    const meta = await getMetaByName.call(req.params['name'])
+    const operators = getOperators.call(typeof meta[0]?.value)
+    res.json({
+      values: meta.map(m => m.value),
+      operators
     })
   } catch (e) {
     res.json({
