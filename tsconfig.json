@@ -9,6 +9,7 @@
     "noImplicitAny": true,
     "preserveConstEnums": true,
     "sourceMap": true,
+    "skipLibCheck": true,
     "alwaysStrict": true,
     "strictNullChecks": true,
     "noErrorTruncation": true,
