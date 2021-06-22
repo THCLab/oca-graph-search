@@ -1,10 +1,12 @@
-import express, { Application, Request, Response } from 'express'
+import express, { Application, Router, Request, Response } from 'express'
 import cors from 'cors'
 
 const app: Application = express()
 // @ts-ignore
 app.use(express.json())
 app.use(cors())
+
+const routerV1 = Router()
 
 const port: number = 3000
 
@@ -27,11 +29,7 @@ const getMetaByName = new GetMetaByName(metaRepo)
 import { GetOperators } from './services/GetOperators'
 const getOperators = new GetOperators()
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello world!')
-})
-
-app.get('/q', async (req: Request, res: Response) => {
+routerV1.get('/q', async (req: Request, res: Response) => {
   try {
     const params = req.query.params || req.body.params
     const entities = await findEntitiesByMeta.call(params)
@@ -46,7 +44,7 @@ app.get('/q', async (req: Request, res: Response) => {
   }
 })
 
-app.get('/meta', async (_req: Request, res: Response) => {
+routerV1.get('/meta', async (_req: Request, res: Response) => {
   try {
     const names = await getMetaNames.call()
     res.json({
@@ -59,7 +57,7 @@ app.get('/meta', async (_req: Request, res: Response) => {
   }
 })
 
-app.get('/meta/:name', async (req: Request, res: Response) => {
+routerV1.get('/meta/:name', async (req: Request, res: Response) => {
   try {
     const meta = await getMetaByName.call(req.params['name'])
     const operators = getOperators.call(typeof meta[0]?.value)
@@ -73,6 +71,8 @@ app.get('/meta/:name', async (req: Request, res: Response) => {
     })
   }
 })
+
+app.use('/api/v1', routerV1)
 
 app.listen(port, function () {
   console.log(`App is listening on port ${port}`)
