@@ -31,7 +31,9 @@ const getOperators = new GetOperators()
 
 routerV1.get('/q', async (req: Request, res: Response) => {
   try {
-    const params = req.query.params || req.body.params
+    const params = { meta: [], attributes: []}
+    params.meta = req.query.meta || req.body.meta || []
+    params.attributes = req.query.attributes || req.body.attributes || []
     const entities = await findEntitiesByMeta.call(params)
     res.json({
       results: entities

@@ -11,20 +11,51 @@ export class EntityRepo {
     this.g = g
   }
 
-  async byParams(params: { meta: Meta, op?: string }[]) {
-    if (params.length === 0) { return [] }
+  async byParams(
+    metaParams: { meta: Meta, op?: string }[],
+    attrParams: { name: string }[]
+  ) {
+    let traversal = this.g
 
-    const results = await this.g
-      .V().hasLabel('entity')
+    if (metaParams.length === 0 && attrParams.length === 0) {
+      // @ts-ignore
+      traversal = this.g.V().hasLabel('entity')
+    }
+
+    if (metaParams.length > 0) {
+      // @ts-ignore
+      traversal = traversal.V().hasLabel('entity')
       .and(
-        ...params.map(param =>
+        ...metaParams.map(param =>
           __.in_('describes')
             .has('name', param.meta.name)
             .has('value', parseValue(param.meta.value, param.op))
         )
-      ).project('id', 'meta')
+      ).as('e1')
+    }
+    if (attrParams.length > 0) {
+      // @ts-ignore
+      traversal = traversal.V().hasLabel('attribute')
+      .and(
+        ...attrParams.map(param =>
+          __.has('name', param.name)
+            .optional(__.both('similar_to'))
+        )
+      )
+      .in_('contains')
+      .in_('tags').out('describes')
+      .as('e2')
+    }
+    if (metaParams.length > 0 && attrParams.length > 0) {
+      // @ts-ignore
+      traversal = traversal.select('e1').where('e1', P.eq('e2'))
+    }
+    // @ts-ignore
+    traversal = traversal.project('id', 'meta')
       .by('id').by(__.in_('describes').valueMap().fold())
-      .dedup().toList()
+
+    // @ts-ignore
+    const results: any[] = await traversal.dedup().toList()
 
     return results.map(el => new Entity(
       // @ts-ignore
