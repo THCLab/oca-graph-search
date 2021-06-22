@@ -8,13 +8,13 @@ app.use(cors())
 
 const routerV1 = Router()
 
-const port: number = 3000
+const port: number = Number(process.env.PORT) || 3000
 
 import gremlin from 'gremlin'
 const { statics: __ } = gremlin.process
 const traversal = gremlin.process.AnonymousTraversalSource.traversal;
 const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
-const g = traversal().withRemote(new DriverRemoteConnection('ws://localhost:8182/gremlin'));
+const g = traversal().withRemote(new DriverRemoteConnection(process.env.GREMLIN_URI || 'ws://localhost:8182/gremlin'));
 
 import { EntityRepo } from './repositories/EntityRepo'
 import { FindEntitiesByMeta } from './services/FindEntitiesByMeta'
