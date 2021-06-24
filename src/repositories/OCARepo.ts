@@ -22,6 +22,25 @@ export class OCARepo {
     return results.map(el => el.get('name'))
   }
 
+  async allList() {
+    const results = await this.g
+      .V().hasLabel('oca_sb')
+      .project('name', 'dri', 'entitiesCount')
+      .by('name').by('dri').by(__.in_('tags').out('describes').dedup().count())
+      .dedup().toList()
+
+    return results.map(el => {
+      return {
+        // @ts-ignore
+        name: el.get('name'),
+        // @ts-ignore
+        dri: el.get('dri'),
+        // @ts-ignore
+        entitiesCount: el.get('entitiesCount')
+      }
+    })
+  }
+
   async save (oca: OCA) {
     try {
       const ocaV = await this.findOrCreateOCAVertex(oca)
