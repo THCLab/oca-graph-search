@@ -8,24 +8,24 @@ export class FindEntitiesByData {
     this.entityRepo = entityRepo
   }
 
-  async call (params: { data: any[], attributes: any[] }) {
+  async call (params: { data: any[], schemas: any[] }) {
     const validation = this.validate(params)
     if (!validation.success) { throw validation.errors }
 
     try {
       return await this.entityRepo.byParams(
         validation.output!.data,
-        validation.output!.attributes
+        validation.output!.schemas
       )
     } catch (e) {
       throw [e.statusMessage || e.code || e]
     }
   }
 
-  validate (params: { data: any[], attributes: any[] }) {
+  validate (params: { data: any[], schemas: any[] }) {
     const errors: string[] = []
-    if (!params.data && !params.attributes) {
-      errors.push('Missing data or/and attributes params')
+    if (!params.data && !params.schemas) {
+      errors.push('Missing data or/and schemas params')
     }
     if (!Array.isArray(params.data)) {
       errors.push('Data params must be an array')
@@ -38,13 +38,13 @@ export class FindEntitiesByData {
           errors.push(`params.data[${i}]: Missing value`)
       })
     }
-    if (!Array.isArray(params.attributes)) {
-      errors.push('Attributes params must be an array')
+    if (!Array.isArray(params.schemas)) {
+      errors.push('Schemas params must be an array')
     } else {
-      params.attributes = params.attributes.map(p => (typeof p === 'string') ? JSON.parse(p) : p)
-      params.attributes.forEach((p, i) => {
+      params.schemas = params.schemas.map(p => (typeof p === 'string') ? JSON.parse(p) : p)
+      params.schemas.forEach((p, i) => {
         if (!p.name)
-          errors.push(`params.attributes[${i}]: Missing name`)
+          errors.push(`params.schemas[${i}]: Missing name`)
         if (!p.rank)
           return
         if (isNaN(p.rank))
@@ -65,7 +65,7 @@ export class FindEntitiesByData {
           datum: new Datum(p.name, p.value),
           op: p.op
         })),
-        attributes: params.attributes.map((p: { name: string }) => ({
+        schemas: params.schemas.map((p: { name: string }) => ({
           name: p.name
         }))
       }

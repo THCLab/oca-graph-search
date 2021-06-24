@@ -34,11 +34,11 @@ export class EntityRepo {
 
   async byParams(
     dataParams: { datum: Datum, op?: string }[],
-    attrParams: { name: string }[]
+    schemasParams: { name: string }[]
   ) {
     let traversal = this.g
 
-    if (dataParams.length === 0 && attrParams.length === 0) {
+    if (dataParams.length === 0 && schemasParams.length === 0) {
       // @ts-ignore
       traversal = this.g.V().hasLabel('entity')
     }
@@ -54,20 +54,18 @@ export class EntityRepo {
         )
       ).as('e1')
     }
-    if (attrParams.length > 0) {
+    if (schemasParams.length > 0) {
       // @ts-ignore
-      traversal = traversal.V().hasLabel('attribute')
+      traversal = traversal.V().hasLabel('oca_sb')
       .and(
-        ...attrParams.map(param =>
+        ...schemasParams.map(param =>
           __.has('name', param.name)
-            .optional(__.both('similar_to'))
         )
       )
-      .in_('contains')
       .in_('tags').out('describes')
       .as('e2')
     }
-    if (dataParams.length > 0 && attrParams.length > 0) {
+    if (dataParams.length > 0 && schemasParams.length > 0) {
       // @ts-ignore
       traversal = traversal.select('e1').where('e1', P.eq('e2'))
     }
