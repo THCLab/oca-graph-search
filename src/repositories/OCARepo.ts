@@ -3,6 +3,7 @@ const { statics: __ } = process
 
 import { OCA } from '../models/OCA'
 import { Attribute } from '../models/Attribute'
+import { Datum } from '../models/Datum'
 
 export class OCARepo {
   g: process.GraphTraversalSource<process.GraphTraversal>
@@ -74,5 +75,29 @@ export class OCARepo {
         .to(__.V(attributeV.value.id))
         .next()
     }
+  }
+
+  async addDataToOCA(dri: string, data: Datum[]) {
+    const ocaV = await this.g.V().hasLabel('oca_sb')
+      .has('dri', dri)
+      .next()
+
+    if (!ocaV) {
+      throw `OCA with DRI: '${dri}' not found`
+    }
+
+    data.forEach(async datum => {
+      const datumV = await this.g.V().hasLabel('datum')
+        .has('name', datum.name)
+        .has('value', datum.value)
+        .next()
+
+      if (datumV) {
+        await this.g.V(datumV.value.id)
+          .addE('tags')
+          .to(__.V(ocaV.value.id))
+          .next()
+      }
+    })
   }
 }

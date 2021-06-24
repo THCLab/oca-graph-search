@@ -11,6 +11,27 @@ export class EntityRepo {
     this.g = g
   }
 
+  async byId (id: number) {
+    const entity = (
+      await this.g.V().hasLabel('entity')
+      .has('id', id)
+      .project('id', 'data')
+      .by('id').by(__.in_('describes').valueMap().fold())
+      .dedup().toList()
+    )[0]
+
+    if (!entity) {
+      throw `Entity with id: '${id}' not found`
+    }
+
+    return new Entity(
+      // @ts-ignore
+      entity.get('id'),
+      // @ts-ignore
+      entity.get('data').map(m => new Datum(m.get('name')[0], m.get('value')[0]))
+    )
+  }
+
   async byParams(
     dataParams: { datum: Datum, op?: string }[],
     attrParams: { name: string }[]

@@ -20,6 +20,8 @@ import { EntityRepo } from './repositories/EntityRepo'
 import { FindEntitiesByData } from './services/FindEntitiesByData'
 const entityRepo = new EntityRepo(g)
 const findEntitiesByData = new FindEntitiesByData(entityRepo)
+import { FindEntityById } from './services/FindEntityById'
+const findEntityById = new FindEntityById(entityRepo)
 import { DatumRepo } from './repositories/DatumRepo'
 import { GetDataNames } from './services/GetDataNames'
 const datumRepo = new DatumRepo(g)
@@ -42,6 +44,8 @@ const addOCAByDri = new AddOCAByDri(ocaRepo, ocaRegistryClient)
 
 import { CreateEntity } from './services/CreateEntity'
 const createEntity = new CreateEntity(entityRepo)
+import { AddDataToEntity } from './services/AddDataToEntity'
+const addDataToEntity = new AddDataToEntity(entityRepo, ocaRepo)
 
 routerV1.get('/q', async (req: Request, res: Response) => {
   try {
@@ -107,6 +111,36 @@ routerV1.post('/entities', async (_req: Request, res: Response) => {
     const entity = await createEntity.call()
     res.json({
       result: entity
+    })
+  } catch (e) {
+    res.json({
+      errors: e
+    })
+  }
+})
+routerV1.get('/entities/:id', async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id)
+    const entity = await findEntityById.call(id)
+    res.json({
+      result: entity
+    })
+  } catch (e) {
+    res.json({
+      errors: e
+    })
+  }
+})
+
+routerV1.post('/entities/:id/data', async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id)
+    const { d: data, x: schemaBaseDri } = req.body
+
+    const entity = await findEntityById.call(id)
+    await addDataToEntity.call(entity, data, schemaBaseDri)
+    res.json({
+      success: true
     })
   } catch (e) {
     res.json({
