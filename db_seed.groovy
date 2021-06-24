@@ -7,10 +7,10 @@
 //Remove any existing data to allow this to be rerun
 g.V().drop().iterate()
 
-oca_sb_a = g.addV('oca_sb').property('dri', 'A').next()
-oca_sb_b = g.addV('oca_sb').property('dri', 'B').next()
-oca_sb_c = g.addV('oca_sb').property('dri', 'C').next()
-oca_sb_d = g.addV('oca_sb').property('dri', 'D').next()
+oca_sb_a = g.addV('oca_sb').property('dri', 'A').property('name', 'a').next()
+oca_sb_b = g.addV('oca_sb').property('dri', 'B').property('name', 'b').next()
+oca_sb_c = g.addV('oca_sb').property('dri', 'C').property('name', 'c').next()
+oca_sb_d = g.addV('oca_sb').property('dri', 'D').property('name', 'd').next()
 
 attr_name = g.addV('attribute').property('name', 'name').next()
 attr_surname = g.addV('attribute').property('name', 'surname').next()

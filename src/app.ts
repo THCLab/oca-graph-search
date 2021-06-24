@@ -41,6 +41,8 @@ import { OCARepo } from './repositories/OCARepo'
 const ocaRepo = new OCARepo(g)
 import { AddOCAByDri } from './services/AddOCAByDri'
 const addOCAByDri = new AddOCAByDri(ocaRepo, ocaRegistryClient)
+import { GetOCANames } from './services/GetOCANames'
+const getOCANames = new GetOCANames(ocaRepo)
 
 import { CreateEntity } from './services/CreateEntity'
 const createEntity = new CreateEntity(entityRepo)
@@ -84,6 +86,19 @@ routerV1.get('/datum/:name', async (req: Request, res: Response) => {
     res.json({
       values: data.map(d => d.value),
       operators
+    })
+  } catch (e) {
+    res.json({
+      errors: e
+    })
+  }
+})
+
+routerV1.get('/oca/names', async (_req: Request, res: Response) => {
+  try {
+    const names = await getOCANames.call()
+    res.json({
+      results: names
     })
   } catch (e) {
     res.json({

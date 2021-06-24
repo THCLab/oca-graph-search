@@ -12,6 +12,16 @@ export class OCARepo {
     this.g = g
   }
 
+  async allNames() {
+    const results = await this.g
+      .V().hasLabel('oca_sb')
+      .project('name').by('name')
+      .dedup().toList()
+
+    // @ts-ignore
+    return results.map(el => el.get('name'))
+  }
+
   async save (oca: OCA) {
     try {
       const ocaV = await this.findOrCreateOCAVertex(oca)
