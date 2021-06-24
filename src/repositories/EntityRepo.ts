@@ -65,6 +65,67 @@ export class EntityRepo {
     ))
   }
 
+  async save (entity: Entity) {
+    try {
+      const entityV = await this.findOrCreateEntityVertex(entity)
+
+      entity.data.forEach(async datum => {
+        const datumV = await this.findOrCreateDatumVertex(datum)
+        await this.createEntityToDatumEdge(entityV, datumV)
+      })
+      return true
+    } catch (_e) {
+      return false
+    }
+  }
+
+  private async findOrCreateEntityVertex (entity: Entity) {
+    const t = this.g.V().hasLabel('entity')
+      .has('id', entity.id)
+
+    const entityV = await t.hasNext() ?
+      await t.next() :
+      await this.g.addV('entity')
+      .property('id', entity.id)
+      .next()
+
+    return entityV
+  }
+
+  private async findOrCreateDatumVertex (datum: Datum) {
+    const t = this.g.V().hasLabel('datum')
+      .has('name', datum.name)
+      .has('value', datum.value)
+
+    const datumV = await t.hasNext() ?
+      await t.next() :
+      await this.g.addV('datum')
+      .property('name', datum.name)
+      .property('value', datum.value)
+      .next()
+
+    return datumV
+  }
+
+  private async createEntityToDatumEdge (
+    entityV: IteratorResult<any, any>,
+    datumV: IteratorResult<any, any>
+  ) {
+    const edgeExists = (
+      await this.g.V(datumV.value.id)
+        .outE('describes')
+        .inV()
+        .where(__.id().is(entityV.value.id))
+        .toList()
+    ).length > 0
+
+    if (!edgeExists) {
+      await this.g.V(datumV.value.id)
+        .addE('describes')
+        .to(__.V(entityV.value.id))
+        .next()
+    }
+  }
 }
 
 const parseValue = (value: any, op: string = '=') => {

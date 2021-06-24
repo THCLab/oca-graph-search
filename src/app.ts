@@ -40,6 +40,9 @@ const ocaRepo = new OCARepo(g)
 import { AddOCAByDri } from './services/AddOCAByDri'
 const addOCAByDri = new AddOCAByDri(ocaRepo, ocaRegistryClient)
 
+import { CreateEntity } from './services/CreateEntity'
+const createEntity = new CreateEntity(entityRepo)
+
 routerV1.get('/q', async (req: Request, res: Response) => {
   try {
     const params = { data: [], attributes: []}
@@ -91,6 +94,19 @@ routerV1.post('/oca', async (req: Request, res: Response) => {
     await addOCAByDri.call(req.body['dri'])
     res.json({
       success: true
+    })
+  } catch (e) {
+    res.json({
+      errors: e
+    })
+  }
+})
+
+routerV1.post('/entities', async (_req: Request, res: Response) => {
+  try {
+    const entity = await createEntity.call()
+    res.json({
+      result: entity
     })
   } catch (e) {
     res.json({
