@@ -29,6 +29,17 @@ const getMetaByName = new GetMetaByName(metaRepo)
 import { GetOperators } from './services/GetOperators'
 const getOperators = new GetOperators()
 
+import axios from 'axios'
+const ocaRegistryClient = axios.create({
+  baseURL: process.env.OCA_REGISTRY_API ||
+    'https://repository.oca.argo.colossi.network/api/v3',
+  validateStatus: (_) => true
+})
+import { OCARepo } from './repositories/OCARepo'
+const ocaRepo = new OCARepo(g)
+import { AddOCAByDri } from './services/AddOCAByDri'
+const addOCAByDri = new AddOCAByDri(ocaRepo, ocaRegistryClient)
+
 routerV1.get('/q', async (req: Request, res: Response) => {
   try {
     const params = { meta: [], attributes: []}
@@ -66,6 +77,20 @@ routerV1.get('/meta/:name', async (req: Request, res: Response) => {
     res.json({
       values: meta.map(m => m.value),
       operators
+    })
+  } catch (e) {
+    res.json({
+      errors: e
+    })
+  }
+})
+
+routerV1.post('/oca', async (req: Request, res: Response) => {
+  try {
+    if (!req.body['dri']) { throw ['dri param is required'] }
+    await addOCAByDri.call(req.body['dri'])
+    res.json({
+      success: true
     })
   } catch (e) {
     res.json({
