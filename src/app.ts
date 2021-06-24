@@ -17,15 +17,15 @@ const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
 const g = traversal().withRemote(new DriverRemoteConnection(process.env.GREMLIN_URI || 'ws://localhost:8182/gremlin'));
 
 import { EntityRepo } from './repositories/EntityRepo'
-import { FindEntitiesByMeta } from './services/FindEntitiesByMeta'
+import { FindEntitiesByData } from './services/FindEntitiesByData'
 const entityRepo = new EntityRepo(g)
-const findEntitiesByMeta = new FindEntitiesByMeta(entityRepo)
-import { MetaRepo } from './repositories/MetaRepo'
-import { GetMetaNames } from './services/GetMetaNames'
-const metaRepo = new MetaRepo(g)
-const getMetaNames = new GetMetaNames(metaRepo)
-import { GetMetaByName } from './services/GetMetaByName'
-const getMetaByName = new GetMetaByName(metaRepo)
+const findEntitiesByData = new FindEntitiesByData(entityRepo)
+import { DatumRepo } from './repositories/DatumRepo'
+import { GetDataNames } from './services/GetDataNames'
+const datumRepo = new DatumRepo(g)
+const getDataNames = new GetDataNames(datumRepo)
+import { GetDataByName } from './services/GetDataByName'
+const getDataByName = new GetDataByName(datumRepo)
 import { GetOperators } from './services/GetOperators'
 const getOperators = new GetOperators()
 
@@ -42,10 +42,10 @@ const addOCAByDri = new AddOCAByDri(ocaRepo, ocaRegistryClient)
 
 routerV1.get('/q', async (req: Request, res: Response) => {
   try {
-    const params = { meta: [], attributes: []}
-    params.meta = req.query.meta || req.body.meta || []
+    const params = { data: [], attributes: []}
+    params.data = req.query.data || req.body.data || []
     params.attributes = req.query.attributes || req.body.attributes || []
-    const entities = await findEntitiesByMeta.call(params)
+    const entities = await findEntitiesByData.call(params)
     res.json({
       results: entities
     })
@@ -57,9 +57,9 @@ routerV1.get('/q', async (req: Request, res: Response) => {
   }
 })
 
-routerV1.get('/meta', async (_req: Request, res: Response) => {
+routerV1.get('/data/names', async (_req: Request, res: Response) => {
   try {
-    const names = await getMetaNames.call()
+    const names = await getDataNames.call()
     res.json({
       results: names
     })
@@ -70,12 +70,12 @@ routerV1.get('/meta', async (_req: Request, res: Response) => {
   }
 })
 
-routerV1.get('/meta/:name', async (req: Request, res: Response) => {
+routerV1.get('/datum/:name', async (req: Request, res: Response) => {
   try {
-    const meta = await getMetaByName.call(req.params['name'])
-    const operators = getOperators.call(typeof meta[0]?.value)
+    const data = await getDataByName.call(req.params['name'])
+    const operators = getOperators.call(typeof data[0]?.value)
     res.json({
-      values: meta.map(m => m.value),
+      values: data.map(d => d.value),
       operators
     })
   } catch (e) {

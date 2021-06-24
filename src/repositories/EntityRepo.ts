@@ -2,7 +2,7 @@ import { process } from 'gremlin'
 const { statics: __, P } = process
 
 import { Entity } from '../models/Entity'
-import { Meta } from '../models/Meta'
+import { Datum } from '../models/Datum'
 
 export class EntityRepo {
   g: process.GraphTraversalSource<process.GraphTraversal>
@@ -12,24 +12,24 @@ export class EntityRepo {
   }
 
   async byParams(
-    metaParams: { meta: Meta, op?: string }[],
+    dataParams: { datum: Datum, op?: string }[],
     attrParams: { name: string }[]
   ) {
     let traversal = this.g
 
-    if (metaParams.length === 0 && attrParams.length === 0) {
+    if (dataParams.length === 0 && attrParams.length === 0) {
       // @ts-ignore
       traversal = this.g.V().hasLabel('entity')
     }
 
-    if (metaParams.length > 0) {
+    if (dataParams.length > 0) {
       // @ts-ignore
       traversal = traversal.V().hasLabel('entity')
       .and(
-        ...metaParams.map(param =>
+        ...dataParams.map(param =>
           __.in_('describes')
-            .has('name', param.meta.name)
-            .has('value', parseValue(param.meta.value, param.op))
+            .has('name', param.datum.name)
+            .has('value', parseValue(param.datum.value, param.op))
         )
       ).as('e1')
     }
@@ -46,12 +46,12 @@ export class EntityRepo {
       .in_('tags').out('describes')
       .as('e2')
     }
-    if (metaParams.length > 0 && attrParams.length > 0) {
+    if (dataParams.length > 0 && attrParams.length > 0) {
       // @ts-ignore
       traversal = traversal.select('e1').where('e1', P.eq('e2'))
     }
     // @ts-ignore
-    traversal = traversal.project('id', 'meta')
+    traversal = traversal.project('id', 'data')
       .by('id').by(__.in_('describes').valueMap().fold())
 
     // @ts-ignore
@@ -61,7 +61,7 @@ export class EntityRepo {
       // @ts-ignore
       el.get('id'),
       // @ts-ignore
-      el.get('meta').map(m => new Meta(m.get('name')[0], m.get('value')[0]))
+      el.get('data').map(m => new Datum(m.get('name')[0], m.get('value')[0]))
     ))
   }
 

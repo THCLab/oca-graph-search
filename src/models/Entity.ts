@@ -1,11 +1,11 @@
-import { Meta } from '@/models/Meta'
+import { Datum } from './Datum'
 
 export class Entity {
   id: number
-  meta: Meta[]
+  data: Datum[]
 
-  constructor (id: number, meta: Meta[]) {
+  constructor (id: number, data: Datum[]) {
     this.id = id
-    this.meta = meta
+    this.data = data
   }
 }

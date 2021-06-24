@@ -1,9 +1,9 @@
 import { process } from 'gremlin'
 const { statics: __, P } = process
 
-import { Meta } from '../models/Meta'
+import { Datum } from '../models/Datum'
 
-export class MetaRepo {
+export class DatumRepo {
   g: process.GraphTraversalSource<process.GraphTraversal>
 
   constructor (g: process.GraphTraversalSource<process.GraphTraversal>) {
@@ -12,7 +12,7 @@ export class MetaRepo {
 
   async allNames() {
     const results = await this.g
-      .V().hasLabel('meta')
+      .V().hasLabel('datum')
       .project('name').by('name')
       .dedup().toList()
 
@@ -22,10 +22,10 @@ export class MetaRepo {
 
   async byName(name: string) {
     const results = await this.g
-      .V().hasLabel('meta').has('name', name)
+      .V().hasLabel('datum').has('name', name)
       .dedup().valueMap().toList()
 
-    return results.map(el => new Meta(
+    return results.map(el => new Datum(
       // @ts-ignore
       el.get('name')[0], el.get('value')[0]
     ))

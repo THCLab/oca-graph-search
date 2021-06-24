@@ -1,20 +1,20 @@
 import { EntityRepo } from '../repositories/EntityRepo'
-import { Meta } from '../models/Meta'
+import { Datum } from '../models/Datum'
 
-export class FindEntitiesByMeta {
+export class FindEntitiesByData {
   entityRepo: EntityRepo
 
   constructor (entityRepo: EntityRepo) {
     this.entityRepo = entityRepo
   }
 
-  async call (params: { meta: any[], attributes: any[] }) {
+  async call (params: { data: any[], attributes: any[] }) {
     const validation = this.validate(params)
     if (!validation.success) { throw validation.errors }
 
     try {
       return await this.entityRepo.byParams(
-        validation.output!.meta,
+        validation.output!.data,
         validation.output!.attributes
       )
     } catch (e) {
@@ -22,20 +22,20 @@ export class FindEntitiesByMeta {
     }
   }
 
-  validate (params: { meta: any[], attributes: any[] }) {
+  validate (params: { data: any[], attributes: any[] }) {
     const errors: string[] = []
-    if (!params.meta && !params.attributes) {
-      errors.push('Missing meta or/and attributes params')
+    if (!params.data && !params.attributes) {
+      errors.push('Missing data or/and attributes params')
     }
-    if (!Array.isArray(params.meta)) {
-      errors.push('Meta params must be an array')
+    if (!Array.isArray(params.data)) {
+      errors.push('Data params must be an array')
     } else {
-      params.meta = params.meta.map(p => (typeof p === 'string') ? JSON.parse(p) : p)
-      params.meta.forEach((p, i) => {
+      params.data = params.data.map(p => (typeof p === 'string') ? JSON.parse(p) : p)
+      params.data.forEach((p, i) => {
         if (!p.name)
-          errors.push(`params.meta[${i}]: Missing name`)
+          errors.push(`params.data[${i}]: Missing name`)
         if (!p.value)
-          errors.push(`params.meta[${i}]: Missing value`)
+          errors.push(`params.data[${i}]: Missing value`)
       })
     }
     if (!Array.isArray(params.attributes)) {
@@ -61,8 +61,8 @@ export class FindEntitiesByMeta {
     return {
       success: true,
       output: {
-        meta: params.meta.map((p: { name: string, value: any, op: string }) => ({
-          meta: new Meta(p.name, p.value),
+        data: params.data.map((p: { name: string, value: any, op: string }) => ({
+          datum: new Datum(p.name, p.value),
           op: p.op
         })),
         attributes: params.attributes.map((p: { name: string }) => ({

@@ -1,4 +1,4 @@
-export class Meta {
+export class Datum {
   name: string
   value: any
 
