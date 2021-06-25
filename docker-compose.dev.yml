@@ -10,4 +10,6 @@ services:
   console:
     image: tinkerpop/gremlin-console:3.5.0
     container_name: console
-
+    volumes:
+      - ${PWD}/connection_config.yaml:/opt/gremlin-console/conf/connection_config.yaml
+      - ${PWD}/init.groovy:/opt/gremlin-console/data/init.groovy
