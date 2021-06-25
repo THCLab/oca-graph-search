@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  gremlin-server:
+    image: tinkerpop/gremlin-server:3.5.0
+    container_name: gremlin-server
+    ports:
+      - 8182:8182
+
+  console:
+    image: tinkerpop/gremlin-console:3.5.0
+    container_name: console
+
