@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: oca-graph-search
+  version: 0.1.0
+  description: 'OAS spec'
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+paths:
+  /q:
+    get:
+      summary: /q
+      responses:
+        200:
+          description: "Returns found Entities."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entity"
+  /data/names:
+    get:
+      summary: /data/names
+      responses: {}
+  /datum/{name}:
+    get:
+      summary: '/datum/{name}'
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses: {}
+      tags: []
+  /oca/names:
+    get:
+      summary: /oca/names
+      responses: {}
+      tags: []
+  /oca/list:
+    get:
+      summary: /oca/list
+      responses:
+        '304':
+          description: ''
+      tags: []
+  /oca:
+    post:
+      summary: /oca
+      responses: {}
+      tags: []
+  /entities:
+    post:
+      summary: /entities
+      responses: {}
+      tags: []
+  '/entities/{id}':
+    get:
+      summary: '/entities/{id}'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses: {}
+      tags: []
+  '/entities/{id}/data':
+    post:
+      summary: '/entities/{id}/data'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses: {}
+      tags: []
+tags: []
+
+components:
+  schemas:
+    Entity:
+      type: object
+      properties:
+        id:
+          type: "string"

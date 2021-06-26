@@ -1,12 +1,23 @@
 import express, { Application, Router, Request, Response } from 'express'
 import cors from 'cors'
-
-const app: Application = express()
+import { setup, serve } from "swagger-ui-express";
+import { resolve } from "path";
+import {readFileSync} from "fs";
+import { parse } from 'yaml'
+const app = express()
 // @ts-ignore
 app.use(express.json())
 app.use(cors())
 
 const routerV1 = Router()
+const router2 = Router()
+const swaggerDocument = parse(
+  readFileSync(resolve(process.cwd(), "openapi.yaml")).toString("utf8")
+);
+
+
+router2.use('/api-docs', serve);
+router2.get('/api-docs', setup(swaggerDocument));
 
 const port: number = Number(process.env.PORT) || 3000
 
@@ -180,6 +191,7 @@ routerV1.post('/entities/:id/data', async (req: Request, res: Response) => {
 })
 
 app.use('/api/v1', routerV1)
+app.use('/', router2)
 
 app.listen(port, function () {
   console.log(`App is listening on port ${port}`)
