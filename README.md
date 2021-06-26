@@ -4,6 +4,12 @@ Backend component that serves the core features for storing the data for OCA sch
 
 Until OpenApi spec is missing, please examine [the router](https://github.com/THCLab/oca-graph-search/blob/master/src/app.ts) for the available endpoints.
 
+### Sample Data model
+
+![data model](https://i.imgur.com/GNzYAcu.png)
+Modeled with https://miro.com/app/board/o9J_lEd0MBc=/ .
+
+
 ## Development
 
 * Run `docker-compose -f docker-compose.dev.yml up` to get Apache Tinkerpop running.
