@@ -12,13 +12,11 @@ export class AddDataToEntity {
     this.ocaRepo = ocaRepo
   }
 
-  async call (
-    entity: Entity,
-    dataObject: Record<string, any>,
-    schemaBaseDri: string
-  ) {
+  async call (params: Record<string, any>) {
     try {
-      const data = parseData(dataObject)
+      const validation = validate(params)
+      if (!validation.success) { throw validation.errors }
+      const { entity, data, schemaBaseDri } = validation.output!
       entity.data = data
       const isEntitySaved = await this.entityRepo.save(entity)
       if (!isEntitySaved) {
@@ -28,6 +26,35 @@ export class AddDataToEntity {
       await this.ocaRepo.addDataToOCA(schemaBaseDri, data)
     } catch (e) {
       throw [e.message || e]
+    }
+  }
+}
+
+const validate = (params: Record<string, any>) => {
+  const errors = []
+  const { i, d, x } = params
+  if (!i) { errors.push("Field 'i' is required") }
+  if (typeof i !== 'string') { errors.push("Field 'i' must be a string") }
+  if (!d) { errors.push("Field 'd' is required") }
+  if (typeof d !== 'object') { errors.push("Field 'd' must be an object") }
+  if (!x) { errors.push("Field 'x' is required") }
+  if (typeof x !== 'string') { errors.push("Field 'x' must be a string") }
+
+  if (errors.length !== 0) {
+    return {
+      success: false,
+      errors
+    }
+  }
+
+  const id = i.split('/')[0]
+
+  return {
+    success: true,
+    output: {
+      entity: new Entity(id, []),
+      data: parseData(d),
+      schemaBaseDri: x
     }
   }
 }

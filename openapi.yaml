@@ -66,17 +66,6 @@ paths:
             type: string
       responses: {}
       tags: []
-  '/entities/{id}/data':
-    post:
-      summary: '/entities/{id}/data'
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses: {}
-      tags: []
 tags: []
 
 components:
