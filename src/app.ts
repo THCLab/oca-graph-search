@@ -152,7 +152,7 @@ routerV1.post('/entities', async (req: Request, res: Response) => {
       success: true
     })
   } catch (e) {
-    res.json({
+    res.status(422).json({
       errors: e
     })
   }

@@ -17,6 +17,10 @@ export class AddDataToEntity {
       const validation = validate(params)
       if (!validation.success) { throw validation.errors }
       const { entity, data, schemaBaseDri } = validation.output!
+      const oca = await this.ocaRepo.byDRI(schemaBaseDri)
+      if (!oca) {
+        throw `OCA with DRI: '${schemaBaseDri}' not found. Please import that OCA first`
+      }
       entity.data = data
       const isEntitySaved = await this.entityRepo.save(entity)
       if (!isEntitySaved) {

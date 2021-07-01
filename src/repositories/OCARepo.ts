@@ -41,6 +41,29 @@ export class OCARepo {
     })
   }
 
+  async byDRI(dri: string) {
+    const ocaV = (
+      await this.g.V().hasLabel('oca_sb')
+      .has('dri', dri)
+      .project('name', 'dri', 'attributes')
+      .by('name').by('dri').by(
+        __.outE('contains')
+        .project('isPII', 'name')
+        .by('isPII').by(__.inV().values('name'))
+        .fold()
+      )
+      .next()
+    ).value
+
+    if (!ocaV) { return null }
+
+    return new OCA(
+      ocaV.get('dri'),
+      ocaV.get('name'),
+      ocaV.get('attributes').map((attr: any) => new Attribute(attr.get('name'), attr.get('isPII')))
+    )
+  }
+
   async save (oca: OCA) {
     try {
       const ocaV = await this.findOrCreateOCAVertex(oca)
@@ -68,7 +91,7 @@ export class OCARepo {
       .property('name', oca.name)
       .next()
 
-    return ocaV
+    return ocaV.value
   }
 
   private async findOrCreateAttributeVertex (attribute: Attribute) {
@@ -81,50 +104,54 @@ export class OCARepo {
       .property('name', attribute.name)
       .next()
 
-    return attributeV
+    return attributeV.value
   }
 
   private async createOCAtoAttributeEdge (
-    ocaV: IteratorResult<any, any>,
-    attributeV: IteratorResult<any, any>,
+    ocaV: any,
+    attributeV: any,
     isPII: boolean
   ) {
     const edgeExists = (
-      await this.g.V(ocaV.value.id)
+      await this.g.V(ocaV.id)
         .outE('contains').has('isPII', isPII)
         .inV()
-        .where(__.id().is(attributeV.value.id))
+        .where(__.id().is(attributeV.id))
         .toList()
     ).length > 0
 
     if (!edgeExists) {
-      await this.g.V(ocaV.value.id)
+      await this.g.V(ocaV.id)
         .addE('contains')
         .property('isPII', isPII)
-        .to(__.V(attributeV.value.id))
+        .to(__.V(attributeV.id))
         .next()
     }
   }
 
   async addDataToOCA(dri: string, data: Datum[]) {
-    const ocaV = await this.g.V().hasLabel('oca_sb')
+    const ocaV = (
+      await this.g.V().hasLabel('oca_sb')
       .has('dri', dri)
       .next()
+    ).value
 
     if (!ocaV) {
       throw `OCA with DRI: '${dri}' not found`
     }
 
     data.forEach(async datum => {
-      const datumV = await this.g.V().hasLabel('datum')
+      const datumV = (
+        await this.g.V().hasLabel('datum')
         .has('name', datum.name)
         .has('value', datum.value)
         .next()
+      ).value
 
       if (datumV) {
-        await this.g.V(datumV.value.id)
+        await this.g.V(datumV.id)
           .addE('tags')
-          .to(__.V(ocaV.value.id))
+          .to(__.V(ocaV.id))
           .next()
       }
     })
