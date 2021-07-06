@@ -37,10 +37,10 @@ import { DatumRepo } from './repositories/DatumRepo'
 import { GetDataNames } from './services/GetDataNames'
 const datumRepo = new DatumRepo(g)
 const getDataNames = new GetDataNames(datumRepo)
-import { GetDataByName } from './services/GetDataByName'
-const getDataByName = new GetDataByName(datumRepo)
-import { GetOperators } from './services/GetOperators'
-const getOperators = new GetOperators()
+import { GetDataByNameAndType } from './services/GetDataByNameAndType'
+const getDataByNameAndType = new GetDataByNameAndType(datumRepo)
+import { GetDataOperators } from './services/GetDataOperators'
+const getDataOperators = new GetDataOperators(datumRepo)
 
 import axios from 'axios'
 const ocaRegistryClient = axios.create({
@@ -90,13 +90,24 @@ routerV1.get('/data/names', async (_req: Request, res: Response) => {
   }
 })
 
-routerV1.get('/datum/:name', async (req: Request, res: Response) => {
+routerV1.get('/datum/:name/operators', async (req: Request, res: Response) => {
   try {
-    const data = await getDataByName.call(req.params['name'])
-    const operators = getOperators.call(typeof data[0]?.value)
+    const operators = await getDataOperators.call(req.params['name'])
+    res.json([
+      ...operators
+    ])
+  } catch (e) {
     res.json({
-      values: data.map(d => d.value),
-      operators
+      errors: e
+    })
+  }
+})
+
+routerV1.get('/datum/:name/values/:type', async (req: Request, res: Response) => {
+  try {
+    const data = await getDataByNameAndType.call(req.params)
+    res.json({
+      values: data.map(d => d.value)
     })
   } catch (e) {
     res.json({
@@ -160,8 +171,7 @@ routerV1.post('/entities', async (req: Request, res: Response) => {
 
 routerV1.get('/entities/:id', async (req: Request, res: Response) => {
   try {
-    const id = Number(req.params.id)
-    const entity = await findEntityById.call(id)
+    const entity = await findEntityById.call(req.params.id)
     res.json({
       result: entity
     })

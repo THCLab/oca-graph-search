@@ -20,14 +20,27 @@ export class DatumRepo {
     return results.map(el => el.get('name'))
   }
 
-  async byName(name: string) {
+  async typesByName(name: string) {
     const results = await this.g
-      .V().hasLabel('datum').has('name', name)
+      .V().hasLabel('datum')
+      .has('name', name)
+      .project('type').by('type')
+      .dedup().toList()
+
+    // @ts-ignore
+    return results.map(el => el.get('type'))
+  }
+
+  async byNameAndType(name: string, type: string) {
+    const results = await this.g
+      .V().hasLabel('datum')
+      .has('name', name)
+      .has('type', type)
       .dedup().valueMap().toList()
 
     return results.map(el => new Datum(
       // @ts-ignore
-      el.get('name')[0], el.get('value')[0]
+      el.get('name')[0], el.get('value')[0], el.get('type')[0]
     ))
   }
 }

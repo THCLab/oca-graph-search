@@ -2,6 +2,7 @@ import { EntityRepo } from '../repositories/EntityRepo'
 import { OCARepo } from '../repositories/OCARepo'
 import { Entity } from '../models/Entity'
 import { Datum } from '../models/Datum'
+import { OCA } from '../models/OCA'
 
 export class AddDataToEntity {
   entityRepo: EntityRepo
@@ -21,7 +22,9 @@ export class AddDataToEntity {
       if (!oca) {
         throw `OCA with DRI: '${schemaBaseDri}' not found. Please import that OCA first`
       }
-      entity.data = data
+      const dataValidation = validateDataToOCA(oca, data)
+      if (!dataValidation.success) { throw dataValidation.errors }
+      entity.data = dataValidation.output as Datum[]
       const isEntitySaved = await this.entityRepo.save(entity)
       if (!isEntitySaved) {
         throw 'Error occured while saving entity'
@@ -69,4 +72,59 @@ const parseData = (dataObject: Record<string, any>) => {
     .map(([key, value]) => data.push(new Datum(key, value)) )
 
   return data
+}
+
+const validateDataToOCA = (oca: OCA, data: Datum[]) => {
+  const errors: string[] = []
+  if (oca.attributes.length !== data.length) {
+    const dataNames = data.map(datum => datum.name)
+    const missingAttrs = oca.attributes.filter(attr => !dataNames.includes(attr.name))
+    missingAttrs.forEach(attr => errors.push(`Missing data for attribute '${attr.name}' [${attr.type}]`))
+  }
+
+  const output = data.map(datum => {
+    const attribute = oca.attributes.find(attr => datum.name === attr.name)
+    if (!attribute) {
+      errors.push(`Cannot find matching OCA attribute for '${datum.name}' data key`)
+      return
+    }
+    try {
+      return new Datum(datum.name, castDatumValue(datum.value, attribute.type), attribute.type)
+    } catch (e) {
+      errors.push(`Error occured while casting '${datum.name}' value (${datum.value}). Expected type: ${attribute.type}`)
+    }
+  })
+
+  if (errors.length !== 0) {
+    return {
+      success: false,
+      errors
+    }
+  }
+
+  return {
+    success: true,
+    output
+  }
+}
+
+const castDatumValue = (value: any, type: string) => {
+  switch (type) {
+    case 'Text':
+      const s = String(value).trim()
+      if (s.length === 0) { return null }
+      return s
+    case 'Array[Text]':
+      return value.map((v: any) => String(v))
+    case 'Number':
+      if (value === "" || value === "null") { throw ''}
+      if (value === null) { return null }
+      const n = Number(value)
+      if (isNaN(n)) { throw '' }
+      return n
+    case 'Date':
+      return String(value)
+    case 'Boolean':
+      return !(value === 'false' || value === '0' || !Boolean(value))
+  }
 }

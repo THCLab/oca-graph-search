@@ -4,6 +4,7 @@ const { statics: __ } = process
 import { OCA } from '../models/OCA'
 import { Attribute } from '../models/Attribute'
 import { Datum } from '../models/Datum'
+import { Entity } from '../models/Entity'
 
 export class OCARepo {
   g: process.GraphTraversalSource<process.GraphTraversal>
@@ -48,8 +49,10 @@ export class OCARepo {
       .project('name', 'dri', 'attributes')
       .by('name').by('dri').by(
         __.outE('contains')
-        .project('isPII', 'name')
-        .by('isPII').by(__.inV().values('name'))
+        .project('isPII', 'name', 'type')
+        .by('isPII')
+        .by(__.inV().values('name'))
+        .by(__.inV().values('type'))
         .fold()
       )
       .next()
@@ -60,7 +63,9 @@ export class OCARepo {
     return new OCA(
       ocaV.get('dri'),
       ocaV.get('name'),
-      ocaV.get('attributes').map((attr: any) => new Attribute(attr.get('name'), attr.get('isPII')))
+      ocaV.get('attributes').map((attr: any) => {
+        return new Attribute(attr.get('name'), attr.get('type'), attr.get('isPII'))
+      })
     )
   }
 
@@ -97,11 +102,13 @@ export class OCARepo {
   private async findOrCreateAttributeVertex (attribute: Attribute) {
     const t = this.g.V().hasLabel('attribute')
       .has('name', attribute.name)
+      .has('type', attribute.type)
 
     const attributeV = await t.hasNext() ?
       await t.next() :
       await this.g.addV('attribute')
       .property('name', attribute.name)
+      .property('type', attribute.type)
       .next()
 
     return attributeV.value

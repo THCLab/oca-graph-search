@@ -11,7 +11,7 @@ export class EntityRepo {
     this.g = g
   }
 
-  async byId (id: number) {
+  async byId (id: string) {
     const entity = (
       await this.g.V().hasLabel('entity')
       .has('id', id)
@@ -28,7 +28,7 @@ export class EntityRepo {
       // @ts-ignore
       entity.get('id'),
       // @ts-ignore
-      entity.get('data').map(m => new Datum(m.get('name')[0], m.get('value')[0]))
+      entity.get('data').map(d => new Datum(d.get('name')[0], d.get('value')[0], d.get('type')[0]))
     )
   }
 
@@ -50,6 +50,7 @@ export class EntityRepo {
         ...dataParams.map(param =>
           __.in_('describes')
             .has('name', param.datum.name)
+            .has('type', param.datum.type)
             .has('value', parseValue(param.datum.value, param.op))
         )
       ).as('e1')
@@ -80,7 +81,7 @@ export class EntityRepo {
       // @ts-ignore
       el.get('id'),
       // @ts-ignore
-      el.get('data').map(m => new Datum(m.get('name')[0], m.get('value')[0]))
+      el.get('data').map(d => new Datum(d.get('name')[0], d.get('value')[0], d.get('type')[0]))
     ))
   }
 
@@ -89,8 +90,14 @@ export class EntityRepo {
       const entityV = await this.findOrCreateEntityVertex(entity)
 
       entity.data.forEach(async datum => {
-        const datumV = await this.findOrCreateDatumVertex(datum)
-        await this.createEntityToDatumEdge(entityV, datumV)
+        if (
+          typeof datum.name !== undefined && datum.name != null && datum.name.toLowerCase() != 'null' &&
+          typeof datum.value !== undefined && datum.value != null && String(datum.value).toLowerCase() != 'null' &&
+          datum.type
+        ) {
+          const datumV = await this.findOrCreateDatumVertex(datum)
+          await this.createEntityToDatumEdge(entityV, datumV)
+        }
       })
       return true
     } catch (_e) {
@@ -115,12 +122,14 @@ export class EntityRepo {
     const t = this.g.V().hasLabel('datum')
       .has('name', datum.name)
       .has('value', datum.value)
+      .has('type', datum.type)
 
     const datumV = await t.hasNext() ?
       await t.next() :
       await this.g.addV('datum')
       .property('name', datum.name)
       .property('value', datum.value)
+      .property('type', datum.type)
       .next()
 
     return datumV
@@ -161,6 +170,8 @@ const parseValue = (value: any, op: string = '=') => {
       return P.lte(value)
     case 'is':
       return P.eq(value)
+    case 'is not':
+      return P.neq(value)
     default:
       throw `Invalid operator: "${op}"`
   }

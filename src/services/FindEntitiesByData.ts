@@ -61,8 +61,8 @@ export class FindEntitiesByData {
     return {
       success: true,
       output: {
-        data: params.data.map((p: { name: string, value: any, op: string }) => ({
-          datum: new Datum(p.name, p.value),
+        data: params.data.map((p: { name: string, value: any, type: string, op: string }) => ({
+          datum: new Datum(p.name, p.value, p.type),
           op: p.op
         })),
         schemas: params.schemas.map((p: { name: string }) => ({

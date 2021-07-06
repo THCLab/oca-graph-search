@@ -36,9 +36,9 @@ const validateSchemaResponse = (response: AxiosResponse<any>) => {
 
 const parseOCASchema = (dri: string, schema: Record<any, any>) => {
   const attributes: Attribute[] = []
-  Object.keys(schema.attributes).forEach((attrName: string) => {
+  Object.entries(schema.attributes).forEach(([attrName, attrType]: [string, string]) => {
     attributes.push(
-      new Attribute(attrName, schema.pii_attributes.includes(attrName))
+      new Attribute(attrName, attrType, schema.pii_attributes.includes(attrName))
     )
   })
   return new OCA(dri, schema.name, attributes)

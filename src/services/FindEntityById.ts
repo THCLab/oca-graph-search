@@ -7,7 +7,7 @@ export class FindEntityById {
     this.entityRepo = entityRepo
   }
 
-  async call (id: number) {
+  async call (id: string) {
     try {
       return await this.entityRepo.byId(id)
     } catch (e) {
