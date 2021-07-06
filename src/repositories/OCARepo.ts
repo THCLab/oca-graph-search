@@ -27,7 +27,7 @@ export class OCARepo {
     const results = await this.g
       .V().hasLabel('oca_sb')
       .project('name', 'dri', 'entitiesCount')
-      .by('name').by('dri').by(__.in_('tags').out('describes').dedup().count())
+      .by('name').by('dri').by(__.out('owned_by').dedup().count())
       .dedup().toList()
 
     return results.map(el => {
@@ -162,5 +162,42 @@ export class OCARepo {
           .next()
       }
     })
+  }
+
+  async addOwner(dri: string, entity: Entity) {
+    const ocaV = (
+      await this.g.V().hasLabel('oca_sb')
+      .has('dri', dri)
+      .next()
+    ).value
+
+    if (!ocaV) {
+      throw `OCA with DRI: '${dri}' not found`
+    }
+
+    const entityV = (
+      await this.g.V().hasLabel('entity')
+      .has('id', entity.id)
+      .next()
+    ).value
+
+    if (!entityV) {
+      throw `Entity with ID: '${entity.id}' not found`
+    }
+
+    const edgeExists = (
+      await this.g.V(ocaV.id)
+        .outE('owned_by')
+        .inV()
+        .where(__.id().is(entityV.id))
+        .toList()
+    ).length > 0
+
+    if (!edgeExists) {
+      await this.g.V(ocaV.id)
+        .addE('owned_by')
+        .to(__.V(entityV.id))
+        .next()
+    }
   }
 }

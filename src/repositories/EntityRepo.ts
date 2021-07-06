@@ -63,7 +63,7 @@ export class EntityRepo {
           __.has('name', param.name)
         )
       )
-      .in_('tags').out('describes')
+      .out('owned_by')
       .as('e2')
     }
     if (dataParams.length > 0 && schemasParams.length > 0) {

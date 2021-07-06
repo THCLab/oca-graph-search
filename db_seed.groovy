@@ -55,3 +55,8 @@ g.addE('describes').from(datum_age_53).to(entity_1).next()
 g.addE('describes').from(datum_gender_female).to(entity_2).next()
 g.addE('describes').from(datum_age_23).to(entity_2).next()
 g.addE('describes').from(datum_age_23).to(entity_3).next()
+
+g.addE('owned_by').from(oca_sb_c).to(entity_1).next()
+g.addE('owned_by').from(oca_sb_c).to(entity_3).next()
+g.addE('owned_by').from(oca_sb_d).to(entity_2).next()
+g.addE('owned_by').from(oca_sb_d).to(entity_3).next()

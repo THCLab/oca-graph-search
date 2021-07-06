@@ -31,6 +31,7 @@ export class AddDataToEntity {
       }
 
       await this.ocaRepo.addDataToOCA(schemaBaseDri, data)
+      await this.ocaRepo.addOwner(schemaBaseDri, entity)
     } catch (e) {
       throw [e.message || e]
     }
