@@ -34,7 +34,8 @@ export class EntityRepo {
 
   async byParams(
     dataParams: { datum: Datum, op?: string }[],
-    schemasParams: { name: string }[]
+    schemasParams: { name: string }[],
+    limit: number, offset: number
   ) {
     let traversal = this.g
 
@@ -74,15 +75,26 @@ export class EntityRepo {
     traversal = traversal.project('id', 'data')
       .by('id').by(__.in_('describes').valueMap().fold())
 
-    // @ts-ignore
-    const results: any[] = await traversal.dedup().toList()
+    const result: { count: number, results: any[] } = (
+      // @ts-ignore
+      await traversal.dedup()
+        .fold()
+        .project('count', 'results')
+        .by(__.unfold().count()).by(__.unfold().range(offset, offset+limit).fold())
+        .next()
+    ).value
 
-    return results.map(el => new Entity(
+    return {
       // @ts-ignore
-      el.get('id'),
+      count: result.get('count'),
       // @ts-ignore
-      el.get('data').map(d => new Datum(d.get('name')[0], d.get('value')[0], d.get('type')[0]))
-    ))
+      results: result.get('results').map(el => new Entity(
+        // @ts-ignore
+        el.get('id'),
+        // @ts-ignore
+        el.get('data').map(d => new Datum(d.get('name')[0], d.get('value')[0], d.get('type')[0]))
+      ))
+    }
   }
 
   async save (entity: Entity) {

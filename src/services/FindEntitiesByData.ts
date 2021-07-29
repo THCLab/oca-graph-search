@@ -11,21 +11,28 @@ export class FindEntitiesByData {
   async call (params: { data: any[], schemas: any[] }) {
     const validation = this.validate(params)
     if (!validation.success) { throw validation.errors }
-
     try {
       return await this.entityRepo.byParams(
         validation.output!.data,
-        validation.output!.schemas
+        validation.output!.schemas,
+        validation.output!.limit,
+        validation.output!.offset
       )
     } catch (e) {
       throw [e.statusMessage || e.code || e]
     }
   }
 
-  validate (params: { data: any[], schemas: any[] }) {
+  validate (params: { data: any[], schemas: any[], limit?: any, offset?: any }) {
     const errors: string[] = []
     if (!params.data && !params.schemas) {
       errors.push('Missing data or/and schemas params')
+    }
+    if (params.limit && isNaN(params.limit)) {
+      errors.push("Param limit must be a number")
+    }
+    if (params.offset && isNaN(params.offset)) {
+      errors.push("Param offset must be a number")
     }
     if (!Array.isArray(params.data)) {
       errors.push('Data params must be an array')
@@ -67,7 +74,9 @@ export class FindEntitiesByData {
         })),
         schemas: params.schemas.map((p: { name: string }) => ({
           name: p.name
-        }))
+        })),
+        limit: Number(params.limit) || 100,
+        offset: Number(params.offset) || 0
       }
     }
   }

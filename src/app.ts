@@ -62,11 +62,18 @@ const addDataToEntity = new AddDataToEntity(entityRepo, ocaRepo)
 
 routerV1.get('/q', async (req: Request, res: Response) => {
   try {
-    const params = { data: [], schemas: []}
+    const params: {
+      data: any[], schemas: any[], limit?: number, offset?: number
+    } = { data: [], schemas: [] }
     params.data = req.query.data || req.body.data || []
     params.schemas = req.query.schemas || req.body.schemas || []
-    const entities = await findEntitiesByData.call(params)
+    const limit = req.query.limit || req.body.limit
+    if (limit) { params.limit = limit }
+    const offset = req.query.offset || req.body.offset
+    if (offset) { params.offset = offset }
+    const { count, results: entities } = await findEntitiesByData.call(params)
     res.json({
+      count,
       results: entities
     })
   } catch (e) {
