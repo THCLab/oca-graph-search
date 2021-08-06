@@ -1,15 +1,33 @@
 version: '3'
 
 services:
-  gremlin-server:
-    image: tinkerpop/gremlin-server:3.5.0
-    container_name: gremlin-server
+  janusgraph:
+    image: janusgraph/janusgraph:0.5.3
+    container_name: janusgraph
+    links:
+      - cassandra
+    environment:
+      - JANUS_PROPS_TEMPLATE=cql
+      - janusgraph.storage.hostname=cassandra
     ports:
       - 8182:8182
 
+  cassandra:
+    image: cassandra:3.11.11
+    container_name: cassandra
+    environment:
+      - HEAP_NEWSIZE=1G
+      - MAX_HEAP_SIZE=1G
+    volumes:
+      - ${PWD}/scripts:/scripts
+      - ${PWD}/graph-data:/var/lib/cassandra/data
+
   console:
-    image: tinkerpop/gremlin-console:3.5.0
+    image: janusgraph/janusgraph:0.5.3
+    command: ./bin/gremlin.sh # -e data/db_seed.groovy
+    links:
+      - janusgraph
     container_name: console
     volumes:
-      - ${PWD}/connection_config.yaml:/opt/gremlin-console/conf/connection_config.yaml
-      - ${PWD}/init.groovy:/opt/gremlin-console/data/init.groovy
+      - ${PWD}/connection_config.yaml:/opt/janusgraph/conf/remote.yaml
+      - ${PWD}/db_seed.groovy:/opt/janusgraph/data/db_seed.groovy

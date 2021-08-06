@@ -1,6 +1,6 @@
 //Connects the Gremlin Session to the "remote" Gremlin Server
 //and runs this in a session instead of the default "sessionless" mode
-:remote connect tinkerpop.server conf/remote.yaml session
+:remote connect tinkerpop.server conf/remote.yaml session-managed
 //Sets Gremlin Console into "remote" mode so that each command is run on the server
 :remote console
 
@@ -23,9 +23,9 @@ datum_gender_female = g.addV('datum').property('name', 'gender').property('value
 datum_age_53 = g.addV('datum').property('name', 'age').property('value', 53).property('type', 'Number').next()
 datum_age_23 = g.addV('datum').property('name', 'age').property('value', 23).property('type', 'Number').next()
 
-entity_1 = g.addV('entity').property('id', 1).next()
-entity_2 = g.addV('entity').property('id', 2).next()
-entity_3 = g.addV('entity').property('id', 3).next()
+entity_1 = g.addV('entity').property('id', '1').next()
+entity_2 = g.addV('entity').property('id', '2').next()
+entity_3 = g.addV('entity').property('id', '3').next()
 
 g.addE('contains').property('isPII', false).from(oca_sb_a).to(attr_name).next()
 g.addE('contains').property('isPII', false).from(oca_sb_a).to(attr_age).next()
@@ -37,12 +37,12 @@ g.addE('contains').property('isPII', false).from(oca_sb_d).to(attr_first_name).n
 g.addE('contains').property('isPII', true).from(oca_sb_d).to(attr_last_name).next()
 g.addE('contains').property('isPII', true).from(oca_sb_d).to(attr_age).next()
 
-g.addE('similar_to').property('rank', 0.7).from(attr_name).to(attr_surname).next()
-g.addE('similar_to').property('rank', 0.2).from(attr_first_name).to(attr_surname).next()
-g.addE('similar_to').property('rank', 1).from(attr_first_name).to(attr_name).next()
-g.addE('similar_to').property('rank', 0.2).from(attr_last_name).to(attr_name).next()
-g.addE('similar_to').property('rank', 1).from(attr_last_name).to(attr_surname).next()
-g.addE('similar_to').property('rank', 0.2).from(attr_last_name).to(attr_first_name).next()
+g.addE('similar_to').property('rank', 0.7f).from(attr_name).to(attr_surname).next()
+g.addE('similar_to').property('rank', 0.2f).from(attr_first_name).to(attr_surname).next()
+g.addE('similar_to').property('rank', 1f).from(attr_first_name).to(attr_name).next()
+g.addE('similar_to').property('rank', 0.2f).from(attr_last_name).to(attr_name).next()
+g.addE('similar_to').property('rank', 1f).from(attr_last_name).to(attr_surname).next()
+g.addE('similar_to').property('rank', 0.2f).from(attr_last_name).to(attr_first_name).next()
 
 g.addE('tags').from(datum_gender_male).to(oca_sb_c).next()
 g.addE('tags').from(datum_gender_female).to(oca_sb_d).next()
