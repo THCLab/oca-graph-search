@@ -1,6 +1,7 @@
 import { process } from 'gremlin'
 const { statics: __ } = process
 
+import { compareTwoStrings } from 'string-similarity'
 import { OCA } from '../models/OCA'
 import { Attribute } from '../models/Attribute'
 import { Datum } from '../models/Datum'
@@ -72,10 +73,14 @@ export class OCARepo {
   async save (oca: OCA) {
     try {
       const ocaV = await this.findOrCreateOCAVertex(oca)
+      const allAttributes = await this.findAllAtributes()
 
       oca.attributes.forEach(async attribute => {
         const attributeV = await this.findOrCreateAttributeVertex(attribute)
         await this.createOCAtoAttributeEdge(ocaV, attributeV, attribute.isPII)
+        allAttributes.forEach(async attr => {
+          await this.createAttributeToAttrbuteEdge(attributeV, attr)
+        })
       })
 
       return true
@@ -111,7 +116,15 @@ export class OCARepo {
       .property('type', attribute.type)
       .next()
 
-    return attributeV.value
+    return (await this.g.V(attributeV.value.id)
+      .project('id', 'name').by(__.id()).by('name')
+      .next()).value
+  }
+
+  private async findAllAtributes () {
+    return await this.g.V().hasLabel('attribute')
+      .project('id', 'name').by(__.id()).by('name')
+      .toList()
   }
 
   private async createOCAtoAttributeEdge (
@@ -123,7 +136,7 @@ export class OCARepo {
       await this.g.V(ocaV.id)
         .outE('contains').has('isPII', isPII)
         .inV()
-        .where(__.id().is(attributeV.id))
+        .where(__.id().is(attributeV.get('id')))
         .toList()
     ).length > 0
 
@@ -131,9 +144,30 @@ export class OCARepo {
       await this.g.V(ocaV.id)
         .addE('contains')
         .property('isPII', isPII)
-        .to(__.V(attributeV.id))
+        .to(__.V(attributeV.get('id')))
         .next()
     }
+  }
+
+  private async createAttributeToAttrbuteEdge (attribute1: any, attribute2: any) {
+    const edgeExists = (
+      await this.g.V(attribute1.get('id'))
+        .outE('similar_to')
+        .inV()
+        .where(__.id().is(attribute2.get('id')))
+        .toList()
+    ).length > 0
+    if (edgeExists) { return }
+
+    const rank = compareTwoStrings(
+      attribute1.get('name').toLowerCase(), attribute2.get('name').toLowerCase()
+    )
+    if (rank === 0) { return }
+    await this.g.V(attribute1.get('id'))
+      .addE('similar_to')
+      .property('rank', rank)
+      .to(__.V(attribute2.get('id')))
+      .next()
   }
 
   async addDataToOCA(dri: string, data: Datum[]) {
