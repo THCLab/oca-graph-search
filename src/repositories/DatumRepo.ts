@@ -38,9 +38,15 @@ export class DatumRepo {
       .has('type', type)
       .dedup().valueMap().toList()
 
-    return results.map(el => new Datum(
+    return results.map(el => {
       // @ts-ignore
-      el.get('name')[0], el.get('value')[0], el.get('type')[0]
-    ))
+      const value = el.get(`value::${el.get('type')[0]}`)[0]
+
+      return new Datum(
+        // @ts-ignore
+        el.get('name')[0], value, el.get('type')[0]
+      )
+    }
+    )
   }
 }

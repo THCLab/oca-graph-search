@@ -28,7 +28,12 @@ export class EntityRepo {
       // @ts-ignore
       entity.get('id'),
       // @ts-ignore
-      entity.get('data').map(d => new Datum(d.get('name')[0], d.get('value')[0], d.get('type')[0]))
+      entity.get('data').map(d => {
+        // @ts-ignore
+        const value = d.get(`value::${d.get('type')[0]}`)[0]
+        // @ts-ignore
+        return new Datum(d.get('name')[0], value, d.get('type')[0])
+      })
     )
   }
 
@@ -52,7 +57,7 @@ export class EntityRepo {
           __.in_('describes')
             .has('name', param.datum.name)
             .has('type', param.datum.type)
-            .has('value', parseValue(param.datum.value, param.op))
+            .has(`value::${param.datum.type}`, parseValue(param.datum.value, param.op))
         )
       ).as('e1')
     }
@@ -92,7 +97,12 @@ export class EntityRepo {
         // @ts-ignore
         el.get('id'),
         // @ts-ignore
-        el.get('data').map(d => new Datum(d.get('name')[0], d.get('value')[0], d.get('type')[0]))
+        el.get('data').map(d => {
+          // @ts-ignore
+          const value = d.get(`value::${d.get('type')[0]}`)[0]
+          // @ts-ignore
+          return new Datum(d.get('name')[0], value, d.get('type')[0])
+        })
       ))
     }
   }
@@ -133,14 +143,13 @@ export class EntityRepo {
   private async findOrCreateDatumVertex (datum: Datum) {
     const t = this.g.V().hasLabel('datum')
       .has('name', datum.name)
-      .has('value', datum.value)
-      .has('type', datum.type)
+      .has(`value::${datum.type}`, datum.value)
 
     const datumV = await t.hasNext() ?
       await t.next() :
       await this.g.addV('datum')
       .property('name', datum.name)
-      .property('value', datum.value)
+      .property(`value::${datum.type}`, datum.value)
       .property('type', datum.type)
       .next()
 

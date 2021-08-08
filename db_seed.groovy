@@ -18,10 +18,10 @@ attr_first_name = g.addV('attribute').property('name', 'first_name').property('t
 attr_last_name = g.addV('attribute').property('name', 'last_name').property('type', 'Text').next()
 attr_age = g.addV('attribute').property('name', 'age').property('type', 'Number').next()
 
-datum_gender_male = g.addV('datum').property('name', 'gender').property('value', 'male').property('type', 'Text').next()
-datum_gender_female = g.addV('datum').property('name', 'gender').property('value', 'female').property('type', 'Text').next()
-datum_age_53 = g.addV('datum').property('name', 'age').property('value', 53).property('type', 'Number').next()
-datum_age_23 = g.addV('datum').property('name', 'age').property('value', 23).property('type', 'Number').next()
+datum_gender_male = g.addV('datum').property('name', 'gender').property('value::Text', 'male').property('type', 'Text').next()
+datum_gender_female = g.addV('datum').property('name', 'gender').property('value::Text', 'female').property('type', 'Text').next()
+datum_age_53 = g.addV('datum').property('name', 'age').property('value::Number', 53).property('type', 'Number').next()
+datum_age_23 = g.addV('datum').property('name', 'age').property('value::Number', 23).property('type', 'Number').next()
 
 entity_1 = g.addV('entity').property('id', '1').next()
 entity_2 = g.addV('entity').property('id', '2').next()
